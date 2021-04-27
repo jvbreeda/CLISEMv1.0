@@ -23,5 +23,3 @@ cp -r MONTHLY_PRECIP.nc monthly_precip_dt${timestep}_${index}.nc
 let index=index+1
 
 done < emulice_full_dt$timestep.txt
-#done < emulice_full_dt${timestep}_short.txt
-
