@@ -52,7 +52,7 @@ X = cbind(b[1:70], c[1:70], d[1:70], e[1:70], f[1:70], g[1:70])
 # number of Principal Components to take into account
   nkeep=20 
 # length scale and nugget hyperparameter values 
-hp = data.frame( l.esinw=rep(2.1624, nkeep), l.ecosw = 2.8951, l.obl = 2.3822, l.co2 = 1.6039, l.icevol = 0.8, l.icearea = 0.5, nugget = 0.0001)
+hp = data.frame( l.esinw=rep(2.1624, nkeep), l.ecosw = 2.8951, l.obl = 2.3822, l.co2 = 1.6039, l.icevol = 0.8, l.icearea = 0.5, nugget = 0.001)
 
 # The way the pe_c routine takes hp is not okay: it requires a matrix shaped this way
   hp <- t( as.matrix(hp))
