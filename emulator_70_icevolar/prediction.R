@@ -102,6 +102,11 @@ OUTPUT_PREC <- array ( temp_jan, dim  = c(yval, xval, nmonths))
 for (imonth in seq(1,12))
 {
   OUTPUT_PREC [ , ,imonth] = precipitation[[imonth]]$mean*86400*30/1000
+  for (xval in seq(1,201))
+  for (yval in seq(1,201))
+  if((OUTPUT_PREC [xval,yval,imonth]) < 0){
+  OUTPUT_PREC [xval,yval,imonth] <- 0
+  }
 }
 
 
