@@ -107,7 +107,7 @@ X = cbind(b[1:100], c[1:100], d[1:100], e[1:100], f[1:100])
 # number of Principal Components to take into account
 nkeep=17
 # length scale and nugget hyperparameter values
-hp = data.frame( l.esinw=rep(0.5, nkeep), l.ecosw = 0.5, l.obl = 1, l.co2 = 1, l.icevol = 1.2 , nugget = 0.05)
+hp = data.frame( l.esinw=rep(0.5, nkeep), l.ecosw = 0.5, l.obl = 1, l.co2 = 1, l.icevol = 1.2 , nugget = 0.01)
 hp <- t( as.matrix(hp))
 
 #load the emulator source code
