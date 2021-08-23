@@ -19,9 +19,70 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+# ----------------------------------------------------------------------------------------------------
+# UPDATED 2021: INCLUDE THE BAEYESIAN ANALYSIS OF THE STOCHASTIC MODEL
+# ----------------------------------------------------------------------------------------------------
+
+# the routine to take at time step = 1
+  stochastic_pca_onestep_null_oldinput <- function ( PE, new.input ) {
+    GPp <- lapply( PE$GPList, function(EM_Cali)
+                   GP_P(EM_Cali, new.input, calc_var = FALSE,
+                        extra_output = FALSE ) )
+    # each emulator generates a 'means' and 'variances' vector
+    means     <- sapply(GPp, function(x) x$yp)
+    variances <- sapply(GPp, function(x) x$Sp_diag)
+    simulated.pcscores <- rnorm(length(means) , mean = means,
+                               sd = sqrt ( variances ) )
+    simulated.field <- pca_reconstruct_mean (PE$L, simulated.pcscores)
+    simulated.field  <-  simulated.field + rnorm(length(simulated.field),
+                                                 sd=sqrt(PE$L$rvm))
+    return (list ( simulated.field = simulated.field, score_list =  simulated.pcscores ))
+  }
+
+# ----------------------------------------------------------------------------------------------------
+#the routine to take at time step = 2 to end
+
+ stochastic_pca_onestep  <-  function (PE, oldandnew.input, old.state) {
+  # PE is the output of pe_c. This is the pca emulator
+  # oldandnew.input is the input at time step n-1 (old) and the input at time step n (new)
+  # old.state is the output of this routine at time step n-1.
+  # this will generate one output made of a list composed of : simulated.field, which can
+  # be passed on to the ice sheet model to compute the next ice state, and
+  # simulated.scores, which will be used in the next call to stochastic_pca_onestep
 
 
-#jvb 11022019: GP scripts added to this file
+ GPp <- lapply(PE$GPList, function(EM_Cali)
+                GP_P(EM_Cali, oldandnew.input, calc_var = TRUE, extra_output = FALSE ) )
+
+  # each emulator generates a 'means' and 'variances' vector
+  means     <- lapply(GPp, function(x) x$yp)
+  variances <- lapply(GPp, function(x) x$Sp)
+   oldstate=stoch1$score_list
+   simulated.pcscores <- mapply(
+        function(yp,Sp,oldstate) {
+        sx  <-  sqrt(Sp[1,1])
+        sy <-   sqrt(Sp[2,2])
+        rho  <- Sp[1,2]/sx/sy
+
+        # mux and muy are the  _expected_ values of  scores at timestep i-1 and i
+        mux <- yp[1]
+        muy <- yp[2]
+
+        mu_temp2  <-  muy + sy*rho * ( oldstate - mux ) / sx
+        sd_temp2 <-  sy * sqrt ( 1 - rho*rho )
+
+        return(rnorm ( length(mu_temp2),mean = mu_temp2, sd = sd_temp2)) },means,variances,oldstate)
+
+   # now that we have simulated pc_scores we can reproduce the map
+   simulated.field <- pca_reconstruct_mean (PE$L, simulated.pcscores)
+   # and we still need to add a random number of residual  variance
+   simulated.field  <-  simulated.field +
+                        rnorm(length(simulated.field), sd=sqrt(PE$L$rvm))
+
+   return (list ( simulated.field = simulated.field, score_list =  simulated.pcscores )) }
+# ----------------------------------------------------------------------------------------------------
+
+# UPDATED 2021:  GP scripts added to this file
 meanrm <- function (x) mean (x, na.rm=TRUE)
 
 pca <-
@@ -121,11 +182,9 @@ cov_mat_1 = function(lambda=lambda,X1=X1,X2=X2, covar=exp)
 }
 
 
-
-
-
 GP_C <-
 function( X, Y ,lambda, regress='linear', covar=exp )
+
   # revision history
   # 4.10.2013 : added covar option + passed in output.
   #             Backward campatible.
@@ -535,7 +594,7 @@ pe_l1o_barplot <- function (X, Y, pca_function=pca, hp, nkeep=20, ...)
 
 #mypca was pca jvb 11022019
 #pe_c <- function (X, Y, pca_function=mypca, hp, nkeep)
-pe_c <- function (X, Y, pca_function=mypca, hp, nkeep, ...)
+pe_c <- function (X, Y, pca_function=pca, hp, nkeep, ...)
 {
   # emulator calibration (for same l and nugget applied to all pcas ! )
   # otherwise one may look at an autmatic calibration (later)
@@ -560,7 +619,7 @@ pe_c <- function (X, Y, pca_function=mypca, hp, nkeep, ...)
   return(list(L=L, GPList = GPx))
 
 }
-
+ 
 pe_p <- function (x, PE)
 {
   # pca emulator predictor, at input x
@@ -574,6 +633,27 @@ pe_p <- function (x, PE)
   var_field  <- pca_reconstruct_var ( PE$L, variances)
   return(list(mean=mean_field, var=var_field, means=means, variances=variances))
 }
+
+
+pe_p_pc1 <- function (x, PE)
+{
+  # pca emulator predictor, at input x
+  GPp <- lapply(PE$GPList, function(EM_Cali) GP_P(EM_Cali, x, calc_var = TRUE, extra_output = FALSE ) )
+  means     <- sapply(GPp, function(x) x$yp)
+  variances <- sapply(GPp, function(x) x$Sp_diag)  
+  var <- sapply(GPp, function(x) x$Sp)  
+
+  # need to consider residual variance !!! 
+  # number of samples used for covariance estimation
+  n = nrow(PE$GPList[[1]])
+  mean_field <- pca_reconstruct_mean ( PE$L, means ) 
+  var_field  <- pca_reconstruct_var ( PE$L, variances)
+  var_field2  <- pca_reconstruct_var ( PE$L, var)
+
+  return(list(mean=mean_field, var=var_field, var2=var_field2, means=means, variances=variances))
+}
+
+
 
 pe_p_student <- function (x, PE)
 {
