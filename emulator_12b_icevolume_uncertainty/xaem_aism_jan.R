@@ -50,7 +50,7 @@ temp=list((0))
 
 
 for (i in Exp_list_A) {
-    tofile=file.path('..','output_emulator_100b',paste(Exp1,i,sep=""),paste(prefix,month,suffix,sep=""))
+    tofile=file.path('..','output_emulator_12b',paste(Exp1,i,sep=""),paste(prefix,month,suffix,sep=""))
     nc = nc_open(tofile,write=TRUE)
 
 	temp = ncvar_get(nc, "temp")
@@ -61,7 +61,7 @@ for (i in Exp_list_A) {
 }
 
 for (i in Exp_list_B) {
-    tofile=file.path('..','output_emulator_100b',paste(Exp2,i,sep=""),paste(prefix,month,suffix,sep=""))
+    tofile=file.path('..','output_emulator_12b',paste(Exp2,i,sep=""),paste(prefix,month,suffix,sep=""))
 
     nc = nc_open(tofile,write=TRUE)
 
@@ -73,7 +73,7 @@ for (i in Exp_list_B) {
 }
 
 for (i in Exp_list_C) {
-    tofile=file.path('..','output_emulator_100b',paste(Exp3,i,sep=""),paste(prefix,month,suffix,sep=""))
+    tofile=file.path('..','output_emulator_12b',paste(Exp3,i,sep=""),paste(prefix,month,suffix,sep=""))
     nc = nc_open(tofile,write=TRUE)
 
       temp = ncvar_get(nc, "temp")
@@ -85,7 +85,7 @@ for (i in Exp_list_C) {
 
 
 for (i in Exp_list_D) {
-    tofile=file.path('..','output_emulator_100b',paste(Exp4,i,sep=""),paste(prefix,month,suffix,sep=""))
+    tofile=file.path('..','output_emulator_12b',paste(Exp4,i,sep=""),paste(prefix,month,suffix,sep=""))
     nc = nc_open(tofile,write=TRUE)
 
       temp = ncvar_get(nc, "temp")
